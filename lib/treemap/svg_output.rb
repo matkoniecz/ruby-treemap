@@ -23,8 +23,19 @@ class Treemap::SvgOutput < Treemap::OutputBase
         yield self if block_given?
     end
 
-    def node_label(node)
-        CGI.escapeHTML(node.label)
+    def escaped_text(text)
+        CGI.escapeHTML(text)
+    end
+
+    def node_label(node, label_x)
+        lines = node.label.split(" ")
+        return escaped_text(node.label) if lines.length() == 0
+
+        returned = ""
+        lines.each {|line|
+            returned += '<tspan x="' + label_x.to_s + '" dy="1em">' + escaped_text(line) + '</tspan>'
+        }
+        return returned
     end
 
     def draw_node_body(node)
@@ -35,9 +46,11 @@ class Treemap::SvgOutput < Treemap::OutputBase
         # center label in box
         label = ""
         label += "<text style=\"text-anchor: middle\" font-size=\"15\""
-        label += " x=\"" + (node.bounds.x1 + node.bounds.width / 2).to_s + "\""
-        label += " y=\"" + (node.bounds.y1 + node.bounds.height / 2).to_s + "\">"
-        label += node_label(node)
+        label_x = node.bounds.x1 + node.bounds.width / 2
+        label_y = node.bounds.y1 + node.bounds.height / 2 - 8 * node.label.count(" ") - 8
+        label += " x=\"" + label_x.to_s + "\""
+        label += " y=\"" + label_y.to_s + "\">"
+        label += node_label(node, label_x)
         label += "</text>\n"
         
         label
